@@ -1,36 +1,38 @@
 ---
-title: Welcome to Starlight
-description: Get started building your docs site with Starlight.
+title: KubeOrch Documentation
+description: Transform Kubernetes complexity into simple drag-and-drop workflows.
 template: splash
 hero:
-  tagline: Congrats on setting up a new Starlight project!
+  tagline: Democratize Kubernetes - No YAML, no complexity. Drag, drop, and deploy.
   image:
     file: ../../assets/houston.webp
   actions:
-    - text: Example Guide
-      link: /guides/example/
+    - text: Get Started
+      link: /guides/introduction/
       icon: right-arrow
-    - text: Read the Starlight docs
-      link: https://starlight.astro.build
-      icon: external
+    - text: Architecture Overview
+      link: /architecture/ecosystem-overview/
+      icon: open-book
       variant: minimal
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
-## Next steps
+## The KubeOrch Ecosystem
+
+KubeOrch is a visual Kubernetes orchestration platform split into two main services that work together to eliminate YAML complexity.
 
 <CardGrid stagger>
-	<Card title="Update content" icon="pencil">
-		Edit `src/content/docs/index.mdx` to see this page change.
+	<Card title="Core (Go Backend)" icon="rocket">
+		REST API server built with Go and Gin. Handles workflow execution, Kubernetes cluster management, template rendering, container builds, and real-time streaming via SSE.
 	</Card>
-	<Card title="Add new content" icon="add-document">
-		Add Markdown or MDX files to `src/content/docs` to create new pages.
+	<Card title="UI (Next.js Frontend)" icon="laptop">
+		Visual drag-and-drop interface built with Next.js 15, React Flow, and Zustand. Provides a workflow canvas where users design Kubernetes architectures visually.
 	</Card>
-	<Card title="Configure your site" icon="setting">
-		Edit your `sidebar` and other config in `astro.config.mjs`.
+	<Card title="CLI (orchcli)" icon="seti:shell">
+		Developer CLI tool built with Go and Cobra. One command to set up your dev environment, start services, and manage the full stack with Docker Compose.
 	</Card>
-	<Card title="Read the docs" icon="open-book">
-		Learn more in [the Starlight Docs](https://starlight.astro.build/).
+	<Card title="15+ Resource Types" icon="puzzle">
+		Deployments, Services, Ingress, ConfigMaps, Secrets, PVCs, StatefulSets, Jobs, CronJobs, DaemonSets, HPAs, NetworkPolicies, and extensible CRD plugins.
 	</Card>
 </CardGrid>

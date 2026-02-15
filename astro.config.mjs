@@ -6,19 +6,41 @@ import starlight from '@astrojs/starlight';
 export default defineConfig({
 	integrations: [
 		starlight({
-			title: 'My Docs',
-			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/withastro/starlight' }],
+			title: 'KubeOrch Docs',
+			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/KubeOrch' }],
 			sidebar: [
 				{
-					label: 'Guides',
+					label: 'Getting Started',
 					items: [
-						// Each item here is one entry in the navigation menu.
-						{ label: 'Example Guide', slug: 'guides/example' },
+						{ label: 'Introduction', slug: 'guides/introduction' },
+						{ label: 'Quick Start', slug: 'guides/quickstart' },
 					],
 				},
 				{
-					label: 'Reference',
-					autogenerate: { directory: 'reference' },
+					label: 'Architecture',
+					items: [
+						{ label: 'Ecosystem Overview', slug: 'architecture/ecosystem-overview' },
+						{ label: 'Core Backend', slug: 'architecture/core-backend' },
+						{ label: 'UI Frontend', slug: 'architecture/ui-frontend' },
+						{ label: 'CLI (orchcli)', slug: 'architecture/cli' },
+						{ label: 'Data Flow', slug: 'architecture/data-flow' },
+					],
+				},
+				{
+					label: 'Guides',
+					items: [
+						{ label: 'Cluster Authentication', slug: 'guides/cluster-authentication' },
+						{ label: 'Workflow Lifecycle', slug: 'guides/workflow-lifecycle' },
+						{ label: 'Importing Projects', slug: 'guides/importing-projects' },
+					],
+				},
+				{
+					label: 'API Reference',
+					items: [
+						{ label: 'REST API', slug: 'reference/rest-api' },
+						{ label: 'Data Models', slug: 'reference/data-models' },
+						{ label: 'Configuration', slug: 'reference/configuration' },
+					],
 				},
 			],
 		}),
