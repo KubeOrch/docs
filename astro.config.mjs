@@ -9,6 +9,7 @@ export default defineConfig({
 		starlight({
 			title: 'KubeOrch Docs',
 			favicon: '/favicon.ico',
+			customCss: ['./src/styles/custom.css'],
 			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/KubeOrch' }],
 			sidebar: [
 				{
