@@ -140,3 +140,4 @@ vite.config.ts.timestamp-*
 /.astro
 /.vscode
 .claude/settings.local.json
+.mcp.json

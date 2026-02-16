@@ -144,29 +144,16 @@ ui/
 
 The app uses Zustand with a store-per-domain pattern. Some stores use `persist` middleware to survive page reloads via `localStorage`.
 
-```
-┌──────────────────────────────────────────────────────┐
-│                    Zustand Stores                      │
-├──────────────┬───────────────┬────────────────────────┤
-│  AuthStore   │ WorkflowStore │ ClusterStore           │
-│  (persisted) │ (runtime)     │ (partially persisted)  │
-│              │               │                        │
-│  - token     │ - nodeUpdate  │ - clusters[]           │
-│  - user      │   Handler     │ - selectedCluster      │
-│  - expiresAt │ - secretValues│ - clusterStatuses      │
-│              │ - envValues   │ - defaultClusterId     │
-├──────────────┼───────────────┼────────────────────────┤
-│ ResourceStore│ PluginStore   │ RegistryStore          │
-│ (persisted)  │ (runtime)     │ (runtime)              │
-│              │               │                        │
-│ - viewMode   │ - plugins[]   │ - registries[]         │
-│ - filters    │ - categories  │ - defaultRegistry      │
-├──────────────┼───────────────┼────────────────────────┤
-│  PanelStore  │ SidebarStore  │                        │
-│  (persisted) │ (persisted)   │                        │
-│  - widths    │ - folderState │                        │
-└──────────────┴───────────────┴────────────────────────┘
-```
+| Store | Persistence | State |
+|-------|-------------|-------|
+| **AuthStore** | persisted | `token`, `user`, `expiresAt` |
+| **WorkflowStore** | runtime | `nodeUpdateHandler`, `secretValues`, `envValues` |
+| **ClusterStore** | partial | `clusters[]`, `selectedCluster`, `clusterStatuses`, `defaultClusterId` |
+| **ResourceStore** | persisted | `viewMode`, `filters` |
+| **PluginStore** | runtime | `plugins[]`, `categories` |
+| **RegistryStore** | runtime | `registries[]`, `defaultRegistry` |
+| **PanelStore** | persisted | `widths` |
+| **SidebarStore** | persisted | `folderState` |
 
 ## API Client Pattern
 

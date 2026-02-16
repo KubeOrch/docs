@@ -131,30 +131,7 @@ core/
 
 ## Layered Architecture
 
-```
-┌──────────────────────────────────────────────────┐
-│                   HTTP Layer                      │
-│   routes/routes.go  →  handlers/*_handler.go      │
-│   (Gin router)         (request/response)         │
-├──────────────────────────────────────────────────┤
-│                 Middleware Layer                   │
-│   auth_middleware.go   workflow_middleware.go      │
-│   (JWT validation)     (ownership checks)         │
-├──────────────────────────────────────────────────┤
-│                 Service Layer                     │
-│   services/*_service.go                           │
-│   (Business logic, orchestration)                 │
-├──────────────────────────────────────────────────┤
-│                Repository Layer                   │
-│   repositories/*_repository.go                    │
-│   (MongoDB CRUD operations)                       │
-├──────────────────────────────────────────────────┤
-│              Infrastructure Layer                 │
-│   database/mongodb.go    pkg/kubernetes/*         │
-│   pkg/encryption/*       pkg/template/*           │
-│   (DB, K8s, crypto)      (Template engine)        │
-└──────────────────────────────────────────────────┘
-```
+![Layered Backend Architecture](../../../assets/images/architecture/core-backend/layered-architecture.png)
 
 ## Key Design Patterns
 

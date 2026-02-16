@@ -7,34 +7,7 @@ KubeOrch is a three-repo platform: a Go backend (core), a Next.js frontend (ui),
 
 ## System Architecture
 
-```
-                                    KubeOrch Platform
- ┌─────────────────────────────────────────────────────────────────────────┐
- │                                                                         │
- │  ┌─────────────────────┐         REST/SSE          ┌──────────────────┐ │
- │  │                     │ ◄───────────────────────── │                  │ │
- │  │   Core Backend      │                            │   UI Frontend    │ │
- │  │   (Go / Gin)        │ ─────────────────────────► │   (Next.js 15)   │ │
- │  │   Port 3000         │    JSON responses / SSE    │   Port 3001      │ │
- │  │                     │                            │                  │ │
- │  └────────┬────────────┘                            └──────────────────┘ │
- │           │                                                              │
- │           │                                                              │
- │  ┌────────▼────────────┐         ┌──────────────────────────────────┐   │
- │  │                     │         │                                  │   │
- │  │   MongoDB           │         │   Kubernetes Clusters            │   │
- │  │   (Persistence)     │         │   (via client-go)                │   │
- │  │                     │         │                                  │   │
- │  └─────────────────────┘         └──────────────────────────────────┘   │
- │                                                                         │
- └──────────────────────────────────────────────┬──────────────────────────┘
-                                                │
-                                     ┌──────────▼──────────┐
-                                     │   orchcli (CLI)      │
-                                     │   Docker Compose     │
-                                     │   Dev Orchestration  │
-                                     └─────────────────────┘
-```
+![KubeOrch Platform System Architecture](../../../assets/images/architecture/ecosystem-overview/system-architecture.png)
 
 ## Component Responsibilities
 

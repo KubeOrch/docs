@@ -7,19 +7,7 @@ A workflow in KubeOrch represents a complete Kubernetes application topology -- 
 
 ## Workflow States
 
-```
-  ┌───────┐      Publish       ┌───────────┐      Archive     ┌──────────┐
-  │ Draft │ ──────────────────► │ Published │ ────────────────► │ Archived │
-  │       │ ◄────────────────── │           │ ◄──────────────── │          │
-  └───────┘     Unpublish      └───────────┘     Unarchive     └──────────┘
-      │                              │
-      │         Run                  │         Run
-      └──────────┬───────────────────┘
-                 ▼
-           ┌──────────┐
-           │ Running   │──► Completed / Failed
-           └──────────┘
-```
+![Workflow State Machine](../../../assets/images/guides/workflow-lifecycle/state-machine.png)
 
 - **Draft** -- Initial state. Workflow is being designed on the canvas.
 - **Published** -- Workflow is finalized and ready for deployment.
