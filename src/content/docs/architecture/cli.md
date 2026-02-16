@@ -99,16 +99,7 @@ OrchCLI automatically selects the correct Docker Compose file based on which rep
 
 All three services run inside Docker using pre-built images from GHCR.
 
-```
-┌───────────────── Docker Network ─────────────────┐
-│                                                    │
-│  ┌──────────┐   ┌──────────┐   ┌──────────┐     │
-│  │ MongoDB  │◄──│   Core   │◄──│    UI    │     │
-│  │  :27017  │   │  :3000   │   │  :3001   │     │
-│  └──────────┘   └──────────┘   └──────────┘     │
-│     mongo:8.0    ghcr.io/...    ghcr.io/...      │
-└──────────────────────────────────────────────────┘
-```
+![Production Mode Architecture](../../../assets/images/architecture/cli/production-mode.png)
 
 ### Full Development Mode
 
@@ -117,16 +108,7 @@ All three services run inside Docker using pre-built images from GHCR.
 
 Only MongoDB runs in Docker. UI and Core run on the host with hot reload.
 
-```
-┌──────── Host Machine ────────┐   ┌── Docker ──┐
-│                              │   │            │
-│  ┌────────┐    ┌────────┐   │   │ ┌────────┐│
-│  │   UI   │───►│  Core  │───┼──►│ │MongoDB ││
-│  │ :3001  │    │ :3000  │   │   │ │ :27017 ││
-│  └────────┘    └────────┘   │   │ └────────┘│
-│  npm run dev      air       │   │            │
-└──────────────────────────────┘   └────────────┘
-```
+![Full Development Mode Architecture](../../../assets/images/architecture/cli/full-dev-mode.png)
 
 ### Frontend-Only Development
 
@@ -135,16 +117,7 @@ Only MongoDB runs in Docker. UI and Core run on the host with hot reload.
 
 UI runs on host, backend services in Docker. Frontend devs don't need Go.
 
-```
-┌─── Host ───┐   ┌────────── Docker Network ──────────┐
-│            │   │                                     │
-│ ┌────────┐ │   │  ┌──────────┐   ┌──────────┐     │
-│ │   UI   │─┼──►│  │   Core   │◄──│ MongoDB  │     │
-│ │ :3001  │ │   │  │  :3000   │   │  :27017  │     │
-│ └────────┘ │   │  └──────────┘   └──────────┘     │
-│ npm run dev│   │   ghcr.io/...    mongo:8.0        │
-└────────────┘   └─────────────────────────────────────┘
-```
+![Frontend-Only Development Mode](../../../assets/images/architecture/cli/frontend-dev-mode.png)
 
 ### Backend-Only Development
 
@@ -153,22 +126,7 @@ UI runs on host, backend services in Docker. Frontend devs don't need Go.
 
 Everything runs in Docker, but the Core source code is volume-mounted for hot reload via Air. Backend devs don't need Go installed locally.
 
-```
-┌────────────────── Docker Network ──────────────────┐
-│                                                     │
-│  ┌──────────┐  ┌───────────────┐  ┌──────────┐   │
-│  │ MongoDB  │◄─│     Core      │◄─│    UI    │   │
-│  │  :27017  │  │    :3000      │  │  :3001   │   │
-│  └──────────┘  │ (mounted vol) │  └──────────┘   │
-│                │  cosmtrek/air  │   ghcr.io/...    │
-│                └───────┬───────┘                   │
-└────────────────────────┼───────────────────────────┘
-                         │ volume mount
-                    ┌────┴────┐
-                    │  Host   │
-                    │ ./core/ │
-                    └─────────┘
-```
+![Backend-Only Development Mode](../../../assets/images/architecture/cli/backend-dev-mode.png)
 
 ## Configuration System
 
