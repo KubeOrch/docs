@@ -1,6 +1,6 @@
 ---
-title: UI Frontend Architecture
-description: Deep dive into the Next.js frontend - components, state management, and design patterns.
+title: Overview
+description: Project structure and page routing for the KubeOrch UI frontend.
 ---
 
 The UI is a Next.js 15 application using the App Router, React Flow for the visual canvas, Zustand for state management, and shadcn/ui for the component library.
@@ -140,96 +140,38 @@ ui/
     └── use-mobile.ts
 ```
 
-## State Management Architecture
+## Page Structure and Routing
 
-The app uses Zustand with a store-per-domain pattern. Some stores use `persist` middleware to survive page reloads via `localStorage`.
+The application uses the Next.js App Router. Routes are organized into public routes that do not require authentication and protected routes that are wrapped in the dashboard layout with an auth guard.
 
-| Store | Persistence | State |
-|-------|-------------|-------|
-| **AuthStore** | persisted | `token`, `user`, `expiresAt` |
-| **WorkflowStore** | runtime | `nodeUpdateHandler`, `secretValues`, `envValues` |
-| **ClusterStore** | partial | `clusters[]`, `selectedCluster`, `clusterStatuses`, `defaultClusterId` |
-| **ResourceStore** | persisted | `viewMode`, `filters` |
-| **PluginStore** | runtime | `plugins[]`, `categories` |
-| **RegistryStore** | runtime | `registries[]`, `defaultRegistry` |
-| **PanelStore** | persisted | `widths` |
-| **SidebarStore** | persisted | `folderState` |
+### Public Routes
 
-## API Client Pattern
+| Route | Description |
+|-------|-------------|
+| `/login` | Email and OAuth login form |
+| `/signup` | New account registration |
+| `/auth/callback` | OAuth provider callback handler; exchanges the authorization code for a session token and redirects to the dashboard |
 
-All API calls go through a centralized Axios instance (`lib/api.ts`) that handles:
+These routes are accessible without a valid session. The auth guard in `components/protectedroutes/` redirects authenticated users away from `/login` and `/signup` to prevent redundant sessions.
 
-1. **Base URL** -- Reads `NEXT_PUBLIC_API_URL` from environment
-2. **JWT injection** -- Automatically attaches `Authorization: Bearer` header
-3. **Token refresh** -- If token is expired, automatically calls `/auth/refresh` before retrying
-4. **401 handling** -- On unauthorized response, clears auth state and redirects to `/login`
-5. **Request queuing** -- Multiple requests during token refresh wait for the single refresh to complete
+### Protected Routes
 
-Service functions in `lib/services/` provide typed wrappers around the raw Axios calls.
+All routes under `/dashboard/*` are wrapped in `app/dashboard/layout.tsx`, which renders the sidebar, top bar, and breadcrumb components. The layout also applies the auth guard — unauthenticated requests are redirected to `/login`.
 
-## Workflow Canvas Architecture
-
-The canvas is the centerpiece of the application, built on React Flow:
-
-```
-WorkflowCanvas.tsx
-  ├── React Flow Provider
-  │   ├── Node Types Registry (15+ types)
-  │   │   ├── DeploymentNode
-  │   │   ├── ServiceNode
-  │   │   ├── IngressNode (multi-handle for paths)
-  │   │   ├── ConfigMapNode
-  │   │   ├── SecretNode
-  │   │   ├── StatefulSetNode
-  │   │   ├── JobNode / CronJobNode
-  │   │   ├── DaemonSetNode
-  │   │   ├── HPANode
-  │   │   ├── NetworkPolicyNode
-  │   │   ├── PersistentVolumeClaimNode
-  │   │   └── GenericPluginNode
-  │   │
-  │   ├── Edge Connection Handler
-  │   │   └── Auto-links resources (e.g., Service → Deployment, Ingress → Service)
-  │   │
-  │   ├── Controls + Background + MiniMap
-  │   └── Auto-save (debounced)
-  │
-  ├── CommandPalette (Cmd+K)
-  │   └── Quick-add any resource type with search
-  │
-  ├── NodeSettingsPanel (right sidebar)
-  │   └── Per-type settings editors
-  │
-  └── MiniLogsPanel (bottom panel)
-      └── Real-time execution logs
-```
-
-### Node Data Flow
-
-Each node on the canvas has a `data` property matching a TypeScript interface (defined in `lib/types/nodes.ts`). When a user edits node settings:
-
-![Node Data Flow](../../../assets/images/architecture/ui-frontend/node-data-flow.png)
-
-### Secret Handling
-
-Secret values are **never persisted** to the database. Only key names are stored. Values live transiently in the `WorkflowStore.secretValues` map and are passed directly to Kubernetes at deploy time:
-
-```
-DB stores:     { keys: [{ id, name: "DB_PASSWORD" }] }
-Runtime only:  WorkflowStore.secretValues["node-1"]["DB_PASSWORD"] = "actual-value"
-Deploy time:   Values sent in run request → Core → K8s Secret
-```
-
-## Real-Time Streaming Hooks
-
-Custom hooks wrap `EventSource` (SSE) connections:
-
-| Hook | Purpose | Stream Key |
-|------|---------|------------|
-| `useWorkflowStatusStream` | Node status during deployment | `workflow:<id>` |
-| `useLogStream` | Live pod log streaming | `pod-logs:<id>` |
-| `useResourceStatusStream` | Resource health changes | `resource:<id>` |
-| `useBuildStream` | Build progress and logs | `build:<id>` |
-| `useImportStream` | Import analysis progress | `import:<id>` |
-
-Each hook returns reactive state and auto-reconnects on connection loss.
+| Route | Description |
+|-------|-------------|
+| `/dashboard` | Overview page with aggregate stats and recent workflow activity |
+| `/dashboard/workflow` | Paginated list of all workflows with status badges |
+| `/dashboard/workflow/new` | Wizard for creating a new workflow (blank or from template) |
+| `/dashboard/workflow/[id]` | Full-screen workflow canvas editor; mounts `WorkflowCanvas.tsx` |
+| `/dashboard/workflow/[id]/compare` | Side-by-side version diff using `CompareCanvas.tsx`; accepts `?from=<versionId>&to=<versionId>` query params |
+| `/dashboard/resources/[id]` | Resource detail view with live log streaming (`useLogStream`) and an interactive terminal (`useTerminal`) in tabbed panels |
+| `/dashboard/build/[id]` | Build detail page with real-time build log streaming via `useBuildStream` |
+| `/dashboard/clusters` | Cluster list with connection status |
+| `/dashboard/clusters/new` | Form to register a new cluster (kubeconfig or in-cluster) |
+| `/dashboard/clusters/[name]/edit` | Edit an existing cluster's credentials or settings |
+| `/dashboard/integrations/plugins` | Plugin marketplace with enable/disable controls |
+| `/dashboard/integrations/registries` | Container registry management |
+| `/dashboard/monitoring` | Cluster metrics and alert rules |
+| `/dashboard/settings` | Admin-level application settings |
+| `/dashboard/profile` | User profile, avatar, and password or OAuth provider details |

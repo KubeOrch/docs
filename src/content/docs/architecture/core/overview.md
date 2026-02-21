@@ -1,6 +1,6 @@
 ---
-title: Core Backend Architecture
-description: Deep dive into the Go backend - layers, services, and design patterns.
+title: Overview
+description: Project structure, layered architecture, startup, and graceful shutdown for the KubeOrch core backend.
 ---
 
 The core backend is a Go application built with the Gin web framework. It follows a layered architecture with clear separation between HTTP handlers, business logic services, data repositories, and infrastructure concerns.
@@ -131,49 +131,19 @@ core/
 
 ## Layered Architecture
 
-![Layered Backend Architecture](../../../assets/images/architecture/core-backend/layered-architecture.png)
+![Layered Backend Architecture](../../../../assets/images/architecture/core-backend/layered-architecture.png)
 
-## Key Design Patterns
+The backend is organized into distinct horizontal layers. Each layer has a single responsibility and communicates only with the layers adjacent to it.
 
-### Singleton Services
+**HTTP Layer (`handlers/` + `middleware/`)** -- Gin route handlers receive incoming HTTP requests, extract and validate input from path parameters, query strings, and request bodies, then delegate all logic to the service layer. Handlers never touch MongoDB directly. Middleware runs before handlers to enforce authentication, authorization, and logging uniformly across route groups.
 
-Several services use singleton patterns with `sync.Once` for thread-safe initialization:
+**Service Layer (`services/`)** -- All business logic lives here. Services orchestrate multi-step operations such as workflow execution, cluster health monitoring, and real-time resource watching. Services call repositories for persistence and call `pkg/` packages for infrastructure concerns like template rendering and manifest application. Services do not import handler packages.
 
-- `SSEBroadcaster` -- Single pub/sub hub for all real-time streams
-- `ResourceWatcherManager` -- Centralized K8s watcher lifecycle management
-- `ClusterHealthMonitor` -- Background health check loop
+**Repository Layer (`repositories/`)** -- Thin wrappers around MongoDB collection operations. Repositories translate between Go model structs and BSON documents, handle query construction, and manage indexes. They expose typed methods (`FindByID`, `Create`, `Update`, `Delete`) so the rest of the codebase never constructs raw MongoDB queries.
 
-### Template System
+**Model Layer (`models/`)** -- Plain Go structs with BSON and JSON struct tags. Models define the shape of every document stored in MongoDB and every JSON response returned by the API. Keeping models in their own package prevents import cycles between services and repositories.
 
-Resource templates are stored as YAML files in `templates/core/`. Each resource type has:
-- `metadata.yaml` -- Display name, description, category, default parameters
-- `template.yaml` -- Go template that renders to a Kubernetes manifest
-
-The `TemplateRegistry` loads all templates at startup and the `TemplateEngine` renders them with user-provided parameters.
-
-### Workflow Execution Pipeline
-
-When a workflow is "run", the executor processes each node:
-
-1. **Load workflow** from MongoDB with all nodes and edges
-2. **Resolve connections** -- determine dependency order from edges
-3. **For each node**, based on its type:
-   - Merge node data with template defaults
-   - Render the Kubernetes manifest YAML using the template engine
-   - Apply the manifest to the target cluster via `ManifestApplier`
-4. **Start resource watchers** for deployed resources
-5. **Stream status updates** via SSE as each resource becomes ready
-
-### Credential Security
-
-All cluster credentials are encrypted before storage:
-
-```
-User Input → AES-256-GCM Encrypt → MongoDB
-MongoDB → AES-256-GCM Decrypt → client-go Config
-```
-
-Credentials are **never** returned in API responses after creation.
+**Infrastructure Packages (`pkg/`)** -- Reusable, domain-agnostic packages that can be imported by any layer above them. `pkg/template` renders Go templates into Kubernetes YAML. `pkg/applier` sends manifests to the Kubernetes API server. `pkg/encryption` handles AES-256-GCM for credential storage. `pkg/kubernetes` manages client-go configuration and connection pooling.
 
 ## Startup Sequence
 
@@ -190,6 +160,18 @@ main.go
   └── Graceful Shutdown                # Stop watchers, SSE, health monitor, DB
 ```
 
+Each step is sequential and blocking. A failure at any step before `ListenAndServe` causes the process to exit with a non-zero status code, preventing a partially initialized server from accepting traffic.
+
+`config.Load()` uses Viper to merge `config.yaml` values with environment variable overrides. This means every configuration key can be set via environment variable, which is the standard approach in containerized deployments.
+
+`database.Connect()` not only establishes the MongoDB connection but also creates all collection indexes on startup. Running index creation idempotently at startup ensures indexes are always present even after schema migrations or first deployment, without requiring a separate migration step.
+
+`template.InitializeGlobalRegistry()` scans the `templates/core/` directory tree, reads every `metadata.yaml` file, and populates the in-memory `TemplateRegistry`. This is done before the router is set up so that template validation during request handling never needs to read from disk.
+
+`routes.SetupRouter()` constructs the full Gin engine with all middleware groups and handler registrations. After this call returns, the server is fully configured but not yet accepting connections.
+
+`ClusterHealthMonitor.Start()` launches the background goroutine that will run health checks every 60 seconds. Starting this before `ListenAndServe` ensures monitoring is active from the moment the first request is accepted.
+
 ## Graceful Shutdown
 
 The server handles `SIGINT` and `SIGTERM` signals with ordered cleanup:
@@ -199,3 +181,7 @@ The server handles `SIGINT` and `SIGTERM` signals with ordered cleanup:
 3. Stop health monitor
 4. Shutdown HTTP server (10s deadline)
 5. Close MongoDB connection
+
+The shutdown order is deliberate. Resource watchers and the SSE broadcaster are stopped first because they hold open connections to the Kubernetes API server and to frontend clients respectively. Stopping them before the HTTP server shutdown means that in-flight SSE streams are terminated cleanly rather than being cut mid-stream. The health monitor is stopped next to prevent new MongoDB writes from interfering with the connection closure that follows.
+
+The HTTP server is given a 10-second deadline via `context.WithTimeout` to allow in-flight HTTP requests to complete. Requests that do not finish within that window are forcibly terminated. Only after the HTTP server has shut down is the MongoDB connection closed, ensuring that any final writes (such as marking a running workflow run as cancelled) have a chance to complete before the database driver is torn down.

@@ -68,38 +68,43 @@ Additional data is stored in MongoDB via repository patterns:
 
 ### REST API (Request-Response)
 
-All CRUD operations use standard REST over HTTP:
+All CRUD operations use standard REST over HTTP. Every route lives under the `/v1` prefix and requires a `Authorization: Bearer <token>` header except for auth endpoints.
 
-```
-UI ──── POST /v1/api/workflows ────► Core ────► MongoDB
-UI ◄─── { id, name, nodes, ... } ◄── Core ◄─── MongoDB
-```
+![Workflow API Flow](../../../assets/images/architecture/data-flow/workflow-api-flow.png)
+
+The diagram above shows the lifecycle of a typical workflow operation: the UI sends a request (e.g., `POST /v1/api/workflows` with `name`, `description`, and `cluster_id`), the Core handler validates ownership and input, performs the operation against MongoDB, and returns the full document. All API calls in the UI go through a centralized Axios instance (`lib/api.ts`) that automatically injects the JWT, handles transparent token refresh via a shared promise (preventing concurrent refresh races), and redirects to `/login` on a 401.
 
 ### SSE (Server-Sent Events)
 
-Real-time updates use SSE streams. The core maintains a singleton `SSEBroadcaster` that manages subscriber channels per stream key:
+Real-time updates are pushed to the UI using Server-Sent Events. The Core maintains a singleton `SSEBroadcaster` (initialized once via `sync.Once`) that maps stream keys to slices of subscriber channels:
 
-```
-UI ──── GET /v1/api/workflows/:id/status/stream ────► Core
-UI ◄─── event: node_update                      ◄─── Core ◄── K8s Watcher
-UI ◄─── event: status_change                    ◄─── Core ◄── K8s Watcher
-UI ◄─── event: completed                        ◄─── Core
-```
+![SSE Status Stream](../../../assets/images/architecture/data-flow/workflow-status-stream.png)
 
-Stream types:
-- `workflow:<id>` -- Workflow execution status and node-level updates
-- `pod-logs:<id>` -- Live container log streaming
-- `resource:<id>` -- Resource status changes from Kubernetes watchers
-- `build:<id>` -- Container image build progress
-- `import:<id>` -- Import session progress
+**How it works end-to-end:**
+
+1. The UI opens a long-lived HTTP connection using `fetch()` with an `Authorization: Bearer` header. Native `EventSource` is intentionally avoided because it does not support custom headers.
+2. The Core's SSE handler subscribes to the broadcaster under the relevant stream key (e.g., `workflow:<id>`) and begins flushing events as they arrive.
+3. The `SSEBroadcaster` fans events out non-blocking — if a subscriber's channel buffer is full (slow client), the event is dropped and a warning is logged rather than blocking other subscribers.
+4. The UI hook (`useWorkflowStatusStream`) parses incoming events by type — `metadata`, `node_update`, `workflow_sync`, `error`, and `complete` — and updates local React state. A global `activeConnections` Set prevents duplicate streams from React StrictMode double-mounts.
+5. On disconnect, the hook schedules a reconnect after 3 seconds.
+
+Active stream key namespaces:
+
+| Stream key | Purpose |
+|---|---|
+| `workflow:<id>` | Node-level status during workflow execution |
+| `pod-logs:<id>` | Live container log streaming from a running pod |
+| `resource:<id>` | Kubernetes resource health changes |
+| `build:<id>` | Container image build progress (clone → build → push) |
+| `import:<id>` | Docker Compose / Git import analysis progress |
 
 ### WebSocket
 
-Terminal sessions use WebSocket for bidirectional communication:
+Terminal access to running pods uses a WebSocket connection for full bidirectional communication (stdin/stdout/stderr):
 
-```
-UI ◄───► GET /v1/api/resources/:id/exec/terminal ◄───► Core ◄───► K8s Exec API
-```
+![Terminal Exec Session](../../../assets/images/architecture/data-flow/terminal-exec-session.png)
+
+The UI connects to `GET /v1/api/resources/:id/exec/terminal?shell=bash&token=<jwt>`. The JWT is passed as a URL query parameter because browser WebSocket APIs do not support custom headers — this is a known limitation documented in the codebase with a TODO to implement a short-lived ticket exchange on the backend for improved security. Once connected, the Core proxies input and output directly to the Kubernetes Exec API (`client-go`). The UI hook (`useTerminal`) handles four message types: `metadata` (connection confirmed), `output` (terminal data), `error` (session error), and `close` (session ended), and auto-reconnects unless the session was intentionally closed.
 
 ## Authentication Flow
 
@@ -135,12 +140,19 @@ All credentials are encrypted at rest using AES-256-GCM before storage in MongoD
 
 ### Resource Watchers
 
-The core runs real-time Kubernetes watchers that monitor deployed resources and push status updates via SSE:
+After a workflow is deployed, the Core starts a `ResourceWatcher` for each Kubernetes resource. Watchers use the dynamic `client-go` client with field-selector scoping so they only receive events for the specific resource they own.
 
-```
-K8s API Server ──watch──► ResourceWatcher ──publish──► SSEBroadcaster ──stream──► UI
-```
+![Resource Watch Pipeline](../../../assets/images/architecture/data-flow/resource-watch-pipeline.png)
+
+The pipeline works as follows:
+
+1. **K8s API Server** streams watch events (ADDED, MODIFIED, DELETED) to the `ResourceWatcher` for one of 14 supported resource types (Deployment, Service, StatefulSet, DaemonSet, Job, CronJob, Ingress, ConfigMap, Secret, PVC, Pod, ReplicaSet, HPA, NetworkPolicy).
+2. **ResourceWatcher** extracts a meaningful status using a per-type extractor (e.g., for a Deployment: compares `readyReplicas` vs `replicas` and surfaces any pod-level failure conditions). If the status has changed, it writes the new state to MongoDB.
+3. **SSEBroadcaster** receives the publish event and fans it out to all currently subscribed UI clients on the `workflow:<id>` and `resource:<id>` stream keys.
+4. **UI** receives the `node_update` or `status_change` event and updates the canvas node appearance in real time.
+
+Watchers implement exponential backoff reconnection (5s base, 60s max) so transient API server disruptions self-heal. The `ResourceWatcherManager` singleton tracks all active watchers and stops them cleanly on workflow archive or server shutdown.
 
 ### Health Monitoring
 
-A background `ClusterHealthMonitor` runs every 60 seconds, checking connectivity to all registered clusters and updating their status.
+A background `ClusterHealthMonitor` runs every 60 seconds. It iterates all registered clusters, attempts a lightweight API server ping using the stored (decrypted) credentials, and writes the result (`connected` / `error`) back to MongoDB. The UI reflects this status in the cluster selector and on the dashboard without any manual refresh.

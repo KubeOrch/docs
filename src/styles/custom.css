@@ -9,3 +9,8 @@
 	--sl-color-accent: #4db87a;
 	--sl-color-accent-high: #b3dcc9;
 }
+
+/* Tighten line spacing in code blocks so tree diagrams render with continuous vertical lines */
+pre code {
+	line-height: 1.5;
+}

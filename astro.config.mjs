@@ -23,10 +23,32 @@ export default defineConfig({
 					label: 'Architecture',
 					items: [
 						{ label: 'Ecosystem Overview', slug: 'architecture/ecosystem-overview' },
-						{ label: 'Core Backend', slug: 'architecture/core-backend' },
-						{ label: 'UI Frontend', slug: 'architecture/ui-frontend' },
-						{ label: 'CLI (orchcli)', slug: 'architecture/cli' },
 						{ label: 'Data Flow', slug: 'architecture/data-flow' },
+						{
+							label: 'Core Backend',
+							items: [
+								{ label: 'Overview', slug: 'architecture/core/overview' },
+								{ label: 'API, Auth & Data Model', slug: 'architecture/core/api-and-auth' },
+								{ label: 'Workflow Engine', slug: 'architecture/core/workflow-engine' },
+								{ label: 'Real-Time & Monitoring', slug: 'architecture/core/realtime' },
+							],
+						},
+						{
+							label: 'UI Frontend',
+							items: [
+								{ label: 'Overview', slug: 'architecture/ui/overview' },
+								{ label: 'Workflow Canvas', slug: 'architecture/ui/canvas' },
+								{ label: 'State & Streaming', slug: 'architecture/ui/state-and-streaming' },
+							],
+						},
+						{
+							label: 'CLI (orchcli)',
+							items: [
+								{ label: 'Overview', slug: 'architecture/cli/overview' },
+								{ label: 'Commands', slug: 'architecture/cli/commands' },
+								{ label: 'Development Modes', slug: 'architecture/cli/dev-modes' },
+							],
+						},
 					],
 				},
 				{
