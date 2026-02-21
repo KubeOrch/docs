@@ -9,6 +9,8 @@ This page traces the data flow through the entire system for the most important 
 
 This is the primary flow -- a user creates a visual workflow and deploys it to Kubernetes.
 
+![Workflow API Flow](../../../assets/images/architecture/data-flow/workflow-api-flow.png)
+
 ### Phase 1: Design
 
 ![Workflow Creation - Design Phase](../../../assets/images/architecture/data-flow/workflow-creation.png)
@@ -67,20 +69,22 @@ After deployment, the core maintains active watchers on Kubernetes resources:
 
 ![Real-Time Resource Monitoring](../../../assets/images/architecture/data-flow/realtime-monitoring.png)
 
+### Resource Watch Pipeline
+
+![Resource Watch Pipeline](../../../assets/images/architecture/data-flow/resource-watch-pipeline.png)
+
+### SSE Status Stream
+
+![SSE Status Stream](../../../assets/images/architecture/data-flow/workflow-status-stream.png)
+
+### Terminal Exec Session
+
+![Terminal Exec Session](../../../assets/images/architecture/data-flow/terminal-exec-session.png)
+
 ## Version Control Flow
 
 Workflows support git-like versioning:
 
-```
-Save Workflow → Auto-increment version → Store snapshot in workflow_versions collection
-                                          │
-                                          ├── Compare: GET /versions/compare?v1=1&v2=3
-                                          │   → Returns NodeDiff[] and EdgeDiff[]
-                                          │   → UI shows side-by-side CompareCanvas
-                                          │
-                                          └── Restore: POST /versions/:v/restore
-                                              → Creates new version with old content
-                                              → Updates workflow.nodes and workflow.edges
-```
+![Workflow Versioning](../../../assets/images/architecture/data-flow/workflow-versioning.png)
 
 Each version stores a complete snapshot of nodes and edges, enabling full rollback and diff comparison.

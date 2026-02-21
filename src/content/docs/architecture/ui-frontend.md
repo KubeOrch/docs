@@ -208,13 +208,7 @@ WorkflowCanvas.tsx
 
 Each node on the canvas has a `data` property matching a TypeScript interface (defined in `lib/types/nodes.ts`). When a user edits node settings:
 
-```
-User edits in Settings Panel
-  → WorkflowStore.updateNodeData()
-    → nodeUpdateHandler callback
-      → React Flow setNodes()
-        → Canvas re-renders
-```
+![Node Data Flow](../../../assets/images/architecture/ui-frontend/node-data-flow.png)
 
 ### Secret Handling
 
