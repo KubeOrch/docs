@@ -58,6 +58,7 @@ export default defineConfig({
 						{ label: 'Workflow Lifecycle', slug: 'guides/workflow-lifecycle' },
 						{ label: 'Importing Projects', slug: 'guides/importing-projects' },
 						{ label: 'Production Deployment', slug: 'guides/production-deployment' },
+						{ label: 'Troubleshooting', slug: 'guides/troubleshooting' },
 					],
 				},
 				{
