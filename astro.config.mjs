@@ -59,6 +59,7 @@ export default defineConfig({
 						{ label: 'Importing Projects', slug: 'guides/importing-projects' },
 						{ label: 'Production Deployment', slug: 'guides/production-deployment' },
 						{ label: 'Troubleshooting', slug: 'guides/troubleshooting' },
+						{ label: 'Plugin Development', slug: 'guides/plugin-development' },
 					],
 				},
 				{
