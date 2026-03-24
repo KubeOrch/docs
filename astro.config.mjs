@@ -57,6 +57,7 @@ export default defineConfig({
 						{ label: 'Cluster Authentication', slug: 'guides/cluster-authentication' },
 						{ label: 'Workflow Lifecycle', slug: 'guides/workflow-lifecycle' },
 						{ label: 'Importing Projects', slug: 'guides/importing-projects' },
+						{ label: 'Production Deployment', slug: 'guides/production-deployment' },
 					],
 				},
 				{
