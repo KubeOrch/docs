@@ -68,6 +68,7 @@ export default defineConfig({
 						{ label: 'REST API', slug: 'reference/rest-api' },
 						{ label: 'Data Models', slug: 'reference/data-models' },
 						{ label: 'Configuration', slug: 'reference/configuration' },
+						{ label: 'Changelog', slug: 'reference/changelog' },
 					],
 				},
 			],
