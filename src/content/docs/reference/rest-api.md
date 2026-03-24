@@ -5,6 +5,52 @@ description: Complete API endpoint reference for the KubeOrch Core backend.
 
 All API endpoints are under the `/v1` prefix. Protected endpoints require a valid JWT token in the `Authorization: Bearer <token>` header.
 
+## Common Patterns
+
+### Authentication Header
+
+All protected endpoints require:
+```
+Authorization: Bearer <jwt-token>
+```
+
+### Error Response Format
+
+All errors follow this structure:
+```json
+{
+  "error": "Human-readable error message"
+}
+```
+
+### Common HTTP Status Codes
+
+| Code | Meaning |
+|------|---------|
+| `200` | Success |
+| `201` | Created |
+| `400` | Bad request (invalid input, missing fields) |
+| `401` | Unauthorized (missing or invalid token) |
+| `403` | Forbidden (insufficient permissions) |
+| `404` | Resource not found |
+| `409` | Conflict (duplicate resource) |
+| `500` | Internal server error |
+
+### Pagination
+
+List endpoints support pagination via query parameters:
+```
+GET /v1/api/workflows?page=1&limit=20&sort=created_at&order=desc
+```
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `page` | `1` | Page number |
+| `limit` | `20` | Items per page |
+| `sort` | `created_at` | Sort field |
+| `order` | `desc` | Sort order (`asc` or `desc`) |
+| `search` | — | Search query string |
+
 ## Authentication
 
 ### Public Endpoints
@@ -22,21 +68,42 @@ All API endpoints are under the `/v1` prefix. Protected endpoints require a vali
 ### Request/Response Examples
 
 **Register:**
+```bash
+curl -X POST http://localhost:8080/v1/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "password": "password123", "name": "John Doe"}'
+```
 ```json
-// POST /v1/api/auth/register
+// 201 Created
 {
-  "email": "user@example.com",
-  "password": "password123",
-  "name": "John Doe"
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "user": {
+    "id": "65f1a2b3c4d5e6f7a8b9c0d1",
+    "name": "John Doe",
+    "email": "user@example.com",
+    "role": "user"
+  }
 }
-// Response: { "token": "eyJ...", "user": { "id", "name", "email", "role" } }
 ```
 
 **Login:**
+```bash
+curl -X POST http://localhost:8080/v1/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "password": "password123"}'
+```
 ```json
-// POST /v1/api/auth/login
-{ "email": "user@example.com", "password": "password123" }
-// Response: { "token": "eyJ...", "user": { ... } }
+// 200 OK
+{
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "user": { "id": "...", "name": "John Doe", "email": "user@example.com", "role": "user" }
+}
+```
+
+**Error (invalid credentials):**
+```json
+// 401 Unauthorized
+{ "error": "Invalid email or password" }
 ```
 
 ## User Profile
@@ -61,6 +128,43 @@ All API endpoints are under the `/v1` prefix. Protected endpoints require a vali
 | `POST` | `/v1/api/workflows/:id/run` | Execute the workflow (creates version + deploys) |
 | `GET` | `/v1/api/workflows/:id/runs` | Get workflow execution history |
 | `GET` | `/v1/api/workflows/:id/status/stream` | SSE stream for workflow execution status |
+
+**Create a workflow:**
+```bash
+curl -X POST http://localhost:8080/v1/api/workflows \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "My App", "description": "Web application stack"}'
+```
+```json
+// 201 Created
+{
+  "id": "65f1a2b3c4d5e6f7a8b9c0d1",
+  "name": "My App",
+  "description": "Web application stack",
+  "status": "draft",
+  "nodes": [],
+  "edges": [],
+  "created_at": "2026-03-24T10:00:00Z",
+  "updated_at": "2026-03-24T10:00:00Z"
+}
+```
+
+**Run a workflow:**
+```bash
+curl -X POST http://localhost:8080/v1/api/workflows/<id>/run \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"cluster": "my-cluster", "namespace": "default"}'
+```
+```json
+// 200 OK
+{
+  "run_id": "run_abc123",
+  "status": "deploying",
+  "version": 1
+}
+```
 
 ### Workflow Node Diagnostics
 
@@ -99,6 +203,38 @@ All API endpoints are under the `/v1` prefix. Protected endpoints require a vali
 | `GET` | `/v1/api/clusters/:name/logs` | Get cluster connection logs |
 | `PUT` | `/v1/api/clusters/:name/credentials` | Update cluster credentials |
 | `POST` | `/v1/api/clusters/:name/share` | Share cluster with another user |
+
+**Add a cluster:**
+```bash
+curl -X POST http://localhost:8080/v1/api/clusters \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "production",
+    "server": "https://k8s-api.example.com:6443",
+    "auth_type": "bearer_token",
+    "token": "eyJhbGciOi..."
+  }'
+```
+```json
+// 201 Created
+{
+  "name": "production",
+  "server": "https://k8s-api.example.com:6443",
+  "status": "connected",
+  "version": "v1.28.0"
+}
+```
+
+**Test cluster connection:**
+```bash
+curl -X POST http://localhost:8080/v1/api/clusters/production/test \
+  -H "Authorization: Bearer <token>"
+```
+```json
+// 200 OK
+{ "status": "healthy", "version": "v1.28.0", "nodes": 3 }
+```
 
 ## Resources
 
