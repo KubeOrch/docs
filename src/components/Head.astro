@@ -1,0 +1,71 @@
+---
+import Default from '@astrojs/starlight/components/Head.astro';
+
+const route = Astro.locals.starlightRoute;
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site);
+const pageTitle = route?.entry?.data?.title || 'KubeOrch Docs';
+const pageDescription = route?.entry?.data?.description || 'KubeOrch Documentation — Visual Kubernetes orchestration platform.';
+
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'KubeOrch Docs',
+  url: 'https://docs.kubeorch.dev',
+  description: 'Documentation for KubeOrch — visual Kubernetes orchestration platform.',
+  publisher: {
+    '@type': 'Organization',
+    name: 'KubeOrch',
+    url: 'https://kubeorch.dev',
+    logo: {
+      '@type': 'ImageObject',
+      url: 'https://docs.kubeorch.dev/favicon.ico',
+    },
+  },
+};
+
+const articleSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  headline: pageTitle,
+  description: pageDescription,
+  url: canonicalUrl.href,
+  publisher: {
+    '@type': 'Organization',
+    name: 'KubeOrch',
+    url: 'https://kubeorch.dev',
+  },
+  mainEntityOfPage: {
+    '@type': 'WebPage',
+    '@id': canonicalUrl.href,
+  },
+};
+
+const breadcrumbs = Astro.url.pathname
+  .split('/')
+  .filter(Boolean)
+  .map((segment, i, arr) => ({
+    '@type': 'ListItem' as const,
+    position: i + 2,
+    name: segment.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+    item: `https://docs.kubeorch.dev/${arr.slice(0, i + 1).join('/')}/`,
+  }));
+
+const breadcrumbSchema = breadcrumbs.length > 0
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Docs', item: 'https://docs.kubeorch.dev/' },
+        ...breadcrumbs,
+      ],
+    }
+  : null;
+---
+
+<Default {...Astro.props}><slot /></Default>
+<link rel="canonical" href={canonicalUrl.href} />
+<script type="application/ld+json" set:html={JSON.stringify(websiteSchema)} />
+<script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
+{breadcrumbSchema && (
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
+)}

@@ -1,0 +1,178 @@
+---
+import type { Props } from '@astrojs/starlight/props';
+---
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <!-- Brand -->
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <svg width="20" height="20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="46" stroke="currentColor" stroke-width="4" fill="none" opacity="0.3"/>
+            <path d="M50 15 L75 35 L75 65 L50 85 L25 65 L25 35 Z" stroke="currentColor" stroke-width="3.5" fill="none"/>
+            <circle cx="50" cy="50" r="10" fill="currentColor" opacity="0.6"/>
+            <line x1="50" y1="15" x2="50" y2="40" stroke="currentColor" stroke-width="2.5" opacity="0.5"/>
+            <line x1="50" y1="60" x2="50" y2="85" stroke="currentColor" stroke-width="2.5" opacity="0.5"/>
+            <line x1="25" y1="35" x2="40" y2="45" stroke="currentColor" stroke-width="2.5" opacity="0.5"/>
+            <line x1="60" y1="55" x2="75" y2="65" stroke="currentColor" stroke-width="2.5" opacity="0.5"/>
+            <line x1="75" y1="35" x2="60" y2="45" stroke="currentColor" stroke-width="2.5" opacity="0.5"/>
+            <line x1="40" y1="55" x2="25" y2="65" stroke="currentColor" stroke-width="2.5" opacity="0.5"/>
+          </svg>
+          <span class="footer-logo-text">KubeOrch</span>
+        </div>
+        <p class="footer-tagline">Visual Kubernetes orchestration.<br/>Ship faster without the YAML.</p>
+        <div class="footer-socials">
+          <a href="https://github.com/KubeOrch" aria-label="GitHub" class="footer-social-link">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Docs -->
+      <div class="footer-col">
+        <p class="footer-heading">Documentation</p>
+        <ul>
+          <li><a href="/guides/introduction/">Introduction</a></li>
+          <li><a href="/guides/quickstart/">Quick Start</a></li>
+          <li><a href="/architecture/ecosystem-overview/">Architecture</a></li>
+          <li><a href="/guides/troubleshooting/">Troubleshooting</a></li>
+        </ul>
+      </div>
+
+      <!-- Developer -->
+      <div class="footer-col">
+        <p class="footer-heading">Developer</p>
+        <ul>
+          <li><a href="/reference/rest-api/">API Reference</a></li>
+          <li><a href="/architecture/cli/commands/">CLI Commands</a></li>
+          <li><a href="/reference/data-models/">Data Models</a></li>
+          <li><a href="https://github.com/KubeOrch">GitHub</a></li>
+        </ul>
+      </div>
+
+      <!-- Links -->
+      <div class="footer-col">
+        <p class="footer-heading">Project</p>
+        <ul>
+          <li><a href="https://kubeorch.dev">Homepage</a></li>
+          <li><a href="/reference/changelog/">Changelog</a></li>
+          <li><a href="mailto:hi@kubeorch.dev">Contact</a></li>
+          <li><a href="/reference/configuration/">Configuration</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-divider"></div>
+
+    <div class="footer-bottom">
+      <p class="footer-copyright">&copy; {new Date().getFullYear()} KubeOrch. All rights reserved.</p>
+      <p class="footer-license">Apache 2.0 License &middot; Built with Astro &amp; Starlight</p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--sl-color-gray-5);
+    background: var(--sl-color-bg);
+    padding: 3rem 1.5rem 1.5rem;
+    margin-top: 2rem;
+  }
+  .footer-inner {
+    max-width: 72rem;
+    margin: 0 auto;
+  }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr 1fr;
+    gap: 2.5rem;
+  }
+  @media (max-width: 768px) {
+    .footer-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+    .footer-brand {
+      grid-column: 1 / -1;
+    }
+  }
+  @media (max-width: 440px) {
+    .footer-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .footer-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--sl-color-white);
+  }
+  .footer-logo-text {
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: -0.01em;
+  }
+  .footer-tagline {
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--sl-color-gray-3);
+    margin-bottom: 1rem;
+    max-width: 200px;
+  }
+  .footer-socials {
+    display: flex;
+    gap: 0.75rem;
+  }
+  .footer-social-link {
+    color: var(--sl-color-gray-3);
+    transition: color 0.15s;
+  }
+  .footer-social-link:hover {
+    color: var(--sl-color-white);
+  }
+  .footer-heading {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--sl-color-gray-3);
+    margin-bottom: 0.75rem;
+  }
+  .footer-col ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .footer-col li {
+    margin-bottom: 0.5rem;
+  }
+  .footer-col a {
+    font-size: 0.85rem;
+    color: var(--sl-color-gray-2);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .footer-col a:hover {
+    color: var(--sl-color-white);
+  }
+  .footer-divider {
+    height: 1px;
+    background: var(--sl-color-gray-5);
+    margin: 2rem 0 1rem;
+  }
+  .footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .footer-copyright,
+  .footer-license {
+    font-size: 0.75rem;
+    color: var(--sl-color-gray-3);
+    margin: 0;
+  }
+</style>
