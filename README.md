@@ -1,7 +1,7 @@
 # KubeOrch Docs
 
 [![Apache 2.0 License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Cloud Native](https://img.shields.io/badge/Cloud%20Native-orange.svg)](https://landscape.cncf.io/)
+[![CNCF Aspiring](https://img.shields.io/badge/CNCF-Aspiring-blue.svg)](https://www.cncf.io/projects/)
 [![Built with Starlight](https://astro.badg.es/v2/built-with-starlight/tiny.svg)](https://starlight.astro.build)
 
 Documentation site for the [KubeOrch](https://github.com/KubeOrch) platform — a visual drag-and-drop tool for designing and deploying Kubernetes workflows.
