@@ -3,12 +3,22 @@ title: Quick Start
 description: Get KubeOrch running locally in minutes using orchcli.
 ---
 
-The fastest way to get KubeOrch running is with **orchcli**, the official developer CLI. It handles Docker Compose orchestration, repository cloning, and dependency installation automatically.
+The fastest way to get KubeOrch running is with **orchcli**, the official developer CLI. It handles Docker Compose orchestration, repository cloning, dependency installation, and configuration automatically.
 
 ## Prerequisites
 
 - **Docker** and **Docker Compose** (v2) installed and running
 - **Git** installed (orchcli can auto-install it on Linux/macOS)
+
+Depending on your setup path, you may also need:
+
+| Setup | Additional Requirements |
+|-------|----------------------|
+| Production Mode | None -- everything runs in Docker |
+| Frontend Development | **Node.js 20+** |
+| Backend Development | None -- Go runs inside Docker via Air |
+| Full Stack Development | **Node.js 20+** and **Go 1.25+** |
+| Manual Setup | **Node.js 20+** and **Go 1.25+** |
 
 ## Install orchcli
 
@@ -39,10 +49,8 @@ Run the full platform from pre-built Docker images -- no source code needed.
 # Create a project directory
 mkdir kubeorch && cd kubeorch
 
-# Initialize (production mode -- no repos cloned)
+# Initialize and start
 orchcli init
-
-# Start all services in background
 orchcli start -d
 ```
 
@@ -75,17 +83,21 @@ orchcli stop -v         # Stop and remove volumes (clean slate)
 
 ## Development Setup: Full Stack
 
-For contributing to both frontend and backend.
+For contributing to both frontend and backend. Requires **Node.js 20+** and **Go 1.25+**.
 
 ```bash
 mkdir kubeorch && cd kubeorch
 
-# Clone both repos + install dependencies
+# Clone both repos, install deps, and generate config files
 orchcli init --fork-ui --fork-core
 
 # Start MongoDB in Docker
 orchcli start -d
+```
 
+Then in separate terminals:
+
+```bash
 # Terminal 1: Start Core backend (hot reload with Air)
 cd core && air
 
@@ -93,18 +105,24 @@ cd core && air
 cd ui && npm run dev
 ```
 
+In this mode, `orchcli start -d` only runs **MongoDB** in Docker. Both Core and UI run on your host machine with hot reload.
+
+`orchcli init` automatically generates:
+- `core/config.yaml` -- with random JWT secret, encryption key, and MongoDB URI pointing to `localhost:27017`
+- `ui/.env.local` -- with `NEXT_PUBLIC_API_URL` pointing to the Core API
+
 Edit files in `core/` or `ui/` -- changes hot-reload automatically.
 
 ---
 
 ## Development Setup: Frontend Only
 
-For UI development without needing Go installed.
+For UI development without needing Go installed. Requires **Node.js 20+**.
 
 ```bash
 mkdir kubeorch && cd kubeorch
 
-# Clone UI repo only
+# Clone UI repo, install deps, and generate .env.local
 orchcli init --fork-ui
 
 # Start MongoDB + Core API in Docker
@@ -114,25 +132,29 @@ orchcli start -d
 cd ui && npm run dev
 ```
 
-The Core API runs from a Docker image at `localhost:3000`. You only need Node.js.
+In this mode, `orchcli start -d` runs **MongoDB and Core API** in Docker. The Core API is available at `localhost:3000`. You only need Node.js.
+
+`orchcli init` automatically generates `ui/.env.local` with the API URL.
 
 ---
 
 ## Development Setup: Backend Only
 
-For backend development without needing Node.js installed.
+For backend development without needing Node.js installed. No Go installation required on the host either -- the Core code is volume-mounted into a Docker container running Air for hot reload.
 
 ```bash
 mkdir kubeorch && cd kubeorch
 
-# Clone Core repo only
+# Clone Core repo, install deps, and generate config.yaml
 orchcli init --fork-core
 
 # Start everything (Core with mounted code + hot reload via Air)
 orchcli start -d
 ```
 
-Your Core source code is volume-mounted into the Docker container. Edit files locally and they hot-reload inside Docker -- no Go installation required on the host.
+In this mode, `orchcli start -d` runs **MongoDB, Core (via Air), and UI** all in Docker. Your Core source code is volume-mounted, so edits on the host hot-reload inside the container.
+
+`orchcli init` automatically generates `core/config.yaml` with default values.
 
 ---
 
@@ -143,7 +165,7 @@ External contributors can clone from their own forks:
 ```bash
 mkdir kubeorch && cd kubeorch
 
-# Clone from your fork
+# Clone from your fork (config files are auto-generated)
 orchcli init --fork-ui=youruser/ui --fork-core=youruser/core
 
 # Upstream remote is auto-configured
@@ -170,6 +192,7 @@ orchcli debug
 # Execute a command inside a container
 orchcli exec core sh
 orchcli exec ui sh
+orchcli exec mongodb mongosh kubeorchestra
 
 # View recent logs for a specific service
 orchcli logs --tail 50 core
@@ -179,7 +202,7 @@ orchcli logs --tail 50 core
 
 ## Manual Setup (Without orchcli)
 
-If you prefer manual setup without the CLI:
+If you prefer manual setup without the CLI. Requires **Node.js 20+** and **Go 1.25+**.
 
 ### 1. Start MongoDB
 
@@ -195,7 +218,21 @@ docker run -d --name kubeorch-mongo \
 ```bash
 git clone https://github.com/KubeOrch/core.git && cd core
 cp config.yaml.example config.yaml
-# Edit config.yaml: set MONGO_URI, JWT_SECRET, ENCRYPTION_KEY
+```
+
+Edit `config.yaml` with these minimal values for local development:
+
+```yaml
+MONGO_URI: "mongodb://localhost:27017/kubeorch"
+JWT_SECRET: "any-secret-key-for-local-dev"
+ENCRYPTION_KEY: "any-encryption-key-for-local-dev"
+PORT: 3000
+GIN_MODE: debug
+```
+
+Then start the server:
+
+```bash
 go run main.go
 ```
 
@@ -204,14 +241,32 @@ go run main.go
 ```bash
 git clone https://github.com/KubeOrch/ui.git && cd ui
 npm install
-# Create .env.local with: NEXT_PUBLIC_API_URL=http://localhost:3000/v1/api
+```
+
+Create a `.env.local` file:
+
+```
+NEXT_PUBLIC_API_URL=http://localhost:3000/v1/api
+```
+
+Then start the dev server:
+
+```bash
 npm run dev
 ```
 
+The UI will be available at `http://localhost:3001`.
+
 ### Required Core Configuration
 
-| Variable | Description |
-|----------|-------------|
-| `MONGO_URI` | MongoDB connection string (e.g., `mongodb://localhost:27017/kubeorch`) |
-| `JWT_SECRET` | Secret key for JWT tokens |
-| `ENCRYPTION_KEY` | Key for encrypting cluster credentials at rest |
+These are the key settings. For the full reference including authentication providers (OIDC, OAuth2), CORS, and all available options, see the [Configuration Reference](/reference/configuration/).
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `MONGO_URI` | Yes | MongoDB connection string (e.g., `mongodb://localhost:27017/kubeorch`) |
+| `JWT_SECRET` | Yes | Secret key for signing JWT tokens |
+| `ENCRYPTION_KEY` | No | Key for encrypting cluster credentials at rest |
+| `PORT` | No | Server port (default: `3000`) |
+| `GIN_MODE` | No | `debug` or `release` (default: `debug`) |
+| `BASE_URL` | No | Backend URL for OAuth callbacks (default: `http://localhost:3000`) |
+| `FRONTEND_URL` | No | Frontend URL for OAuth redirects (default: `http://localhost:3001`) |
