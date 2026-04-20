@@ -3,6 +3,8 @@ title: Quick Start
 description: Get KubeOrch running locally in minutes using orchcli.
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
 The fastest way to get KubeOrch running is with **orchcli**, the official developer CLI. It handles Docker Compose orchestration, repository cloning, dependency installation, and configuration automatically.
 
 ## Prerequisites
@@ -22,16 +24,33 @@ Depending on your setup path, you may also need:
 
 ## Install orchcli
 
-```bash
-# Option 1: Shell script (Linux/macOS)
-curl -sfL https://raw.githubusercontent.com/KubeOrch/cli/main/install.sh | sh
-
-# Option 2: NPM (all platforms)
-npm install -g @kubeorch/cli
-
-# Option 3: Go
-go install github.com/kubeorch/cli@latest
-```
+<Tabs>
+  <TabItem label="macOS / Linux">
+    ```bash
+    curl -sfL https://raw.githubusercontent.com/KubeOrch/cli/main/install.sh | sh
+    ```
+  </TabItem>
+  <TabItem label="Windows">
+    ```bash
+    winget install kubeorch.cli
+    ```
+    *Or use [Scoop](https://scoop.sh):*
+    ```bash
+    scoop bucket add kubeorch https://github.com/KubeOrch/scoop
+    scoop install orchcli
+    ```
+  </TabItem>
+  <TabItem label="NPM (Cross-platform)">
+    ```bash
+    npm install -g @kubeorch/cli
+    ```
+  </TabItem>
+  <TabItem label="Go">
+    ```bash
+    go install github.com/kubeorch/cli@latest
+    ```
+  </TabItem>
+</Tabs>
 
 Verify installation:
 
@@ -192,7 +211,7 @@ orchcli debug
 # Execute a command inside a container
 orchcli exec core sh
 orchcli exec ui sh
-orchcli exec mongodb mongosh kubeorchestra
+orchcli exec mongodb mongosh kubeorch
 
 # View recent logs for a specific service
 orchcli logs --tail 50 core
@@ -265,7 +284,7 @@ These are the key settings. For the full reference including authentication prov
 |----------|----------|-------------|
 | `MONGO_URI` | Yes | MongoDB connection string (e.g., `mongodb://localhost:27017/kubeorch`) |
 | `JWT_SECRET` | Yes | Secret key for signing JWT tokens |
-| `ENCRYPTION_KEY` | No | Key for encrypting cluster credentials at rest |
+| `ENCRYPTION_KEY` | Yes | Key for encrypting cluster credentials at rest |
 | `PORT` | No | Server port (default: `3000`) |
 | `GIN_MODE` | No | `debug` or `release` (default: `debug`) |
 | `BASE_URL` | No | Backend URL for OAuth callbacks (default: `http://localhost:3000`) |
