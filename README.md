@@ -32,6 +32,10 @@ npm run dev
 
 Opens at `http://localhost:4321/`.
 
+## Contributing
+
+See the [contributing guide](https://github.com/KubeOrch/.github/blob/main/CONTRIBUTING.md).
+
 ## License
 
 [Apache 2.0](LICENSE)
