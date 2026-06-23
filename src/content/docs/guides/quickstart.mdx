@@ -22,33 +22,47 @@ Depending on your setup path, you may also need:
 | Full Stack Development | **Node.js 20+** and **Go 1.25+** |
 | Manual Setup | **Node.js 20+** and **Go 1.25+** |
 
-## Install orchcli
+## Step 1: Install orchcli
 
 <Tabs>
-  <TabItem label="macOS / Linux">
+  <TabItem label="Native Install (Recommended)">
+    **macOS, Linux, WSL:**
+
     ```bash
     curl -sfL https://raw.githubusercontent.com/KubeOrch/cli/main/install.sh | sh
     ```
-  </TabItem>
-  <TabItem label="Windows">
-    ```bash
-    winget install kubeorch.cli
+
+    **Windows PowerShell:**
+
+    ```powershell
+    irm https://raw.githubusercontent.com/KubeOrch/cli/main/install.ps1 | iex
     ```
-    *Or use [Scoop](https://scoop.sh):*
-    ```bash
-    scoop bucket add kubeorch https://github.com/KubeOrch/scoop
-    scoop install orchcli
+
+    **Windows CMD:**
+
+    ```batch
+    curl -fsSL https://raw.githubusercontent.com/KubeOrch/cli/main/install.cmd -o install.cmd && install.cmd && del install.cmd
     ```
+
+    :::tip
+    If you see `The token '&&' is not a valid statement separator`, you're in PowerShell, not CMD. Use the PowerShell command above instead.
+
+    If you see `'irm' is not recognized`, you're in CMD, not PowerShell. Use the CMD command above instead.
+    :::
   </TabItem>
-  <TabItem label="NPM (Cross-platform)">
+  <TabItem label="NPM">
     ```bash
     npm install -g @kubeorch/cli
     ```
+
+    Requires **Node.js 14+**. Works on macOS, Linux, and Windows.
   </TabItem>
   <TabItem label="Go">
     ```bash
     go install github.com/kubeorch/cli@latest
     ```
+
+    Requires **Go 1.22+**.
   </TabItem>
 </Tabs>
 
